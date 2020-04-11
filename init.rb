@@ -33,6 +33,17 @@ Redmine::Plugin.register :redmine_filelinks do
   DESCRIPTION
 
 macro :filelink do |obj, args, text|
+args, options = extract_macro_options(args, :size, :separate)
+
+        separate=false
+        if(options[:separate] == 'true')
+                separate= true
+        end
+        filefound = false
+        filename= ""
+        filetarget=""
+        foldername=""
+        foldertarget=""
 
         linktext  = text || "\\\\localhost\\c\\"
         linktarget = "file://"+linktext.gsub('\\','/')
@@ -41,12 +52,35 @@ macro :filelink do |obj, args, text|
         linktextEncoded = linktext.gsub('\\','/')
 
         out = "".html_safe
-        id = "filelink" + SecureRandom.urlsafe_base64()
-        out << link = link_to(linktext, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
-#       cpbutton = " <button type='button' onClick=\"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body$
-        #out << cpbutton.html_safe
 
-        out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCom$
+re = /(^.*[\\])(.*\.[^\\]+)$/m
+
+# Print the match result
+linktext.match(re) do |match|
+   foldername=match[1].to_s
+   filename= match[2].to_s
+   filefound=true
+   foldertarget="file://"+foldername.gsub('\\','/')
+   foldertarget=URI.encode(foldertarget)
+   foldertargetEncoded=foldertarget.gsub('\\','/')
+end
+
+
+        id = "filelink" + SecureRandom.urlsafe_base64()
+
+        if separate && filefound
+                #if we detected a link pointing to a file instead of a folder optionally show a link to the fils and a separate link to the parent folder.
+                out << link = link_to(filename, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+                out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document$
+                out << ' in Verzeichnis '
+                out << link = link_to(foldername, foldertarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+                out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document$
+        else
+                out << link = link_to(linktext, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+                #       cpbutton = " <button type='button' onClick=\"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy$
+                #out << cpbutton.html_safe
+                out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document$
+        end
 
         out
 
