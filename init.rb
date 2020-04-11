@@ -13,79 +13,74 @@ Redmine::Plugin.register :redmine_filelinks do
   author_url 'https://github.com/5inf/'
 
   Redmine::WikiFormatting::Macros.register do
-  desc <<-DESCRIPTION
-        This macro provides means for propperly formatting windows file links
+	  desc <<-DESCRIPTION
+	    This macro provides means for propperly formatting windows file links
+	
+	    For Chromium based browsers (Google Chorme, Microsoft Edge) you may allow local file access
+	      (ideally only restricted to domains you surely trust)
+	    	by installing e.g. the "Enable local file links" plugin by "Takashi Sugimoto (tksugimoto)"
+	      https://chrome.google.com/webstore/detail/enable-local-file-links/nikfmfgobenbhmocjaaboihbeocackld
+	
+	    For Firefox
+	      http://kb.mozillazine.org/Links_to_local_pages_do_not_work
+	      user_pref("capability.policy.policynames", "localfilelinks");
+	      user_pref("capability.policy.localfilelinks.sites", "http://www.example1.com http://www.example2.com");
+	      user_pref("capability.policy.localfilelinks.checkloaduri.enabled", "allAccess");
 
-        For Chromium based browsers (Google Chorme, Microsoft Edge) you may allow local file access
-        (ideally only restricted to domains you surely trust)
-        by installing e.g. the "Enable local file links" plugin by "Takashi Sugimoto (tksugimoto)"
-        https://chrome.google.com/webstore/detail/enable-local-file-links/nikfmfgobenbhmocjaaboihbeocackld
+	    For Mozilla
+	      ...
 
-        For Firefox
-        http://kb.mozillazine.org/Links_to_local_pages_do_not_work
-        user_pref("capability.policy.policynames", "localfilelinks");
-        user_pref("capability.policy.localfilelinks.sites", "http://www.example1.com http://www.example2.com");
-        user_pref("capability.policy.localfilelinks.checkloaduri.enabled", "allAccess");
+	  DESCRIPTION
 
-        For Mozilla
-        ...
+		macro :filelink do |obj, args, text|
+			args, options = extract_macro_options(args, :size, :separate)
 
-  DESCRIPTION
+      separate=false
+      if(options[:separate] == 'true')
+        separate= true
+      end
+      filefound = false
+      filename= ""
+      filetarget=""
+      foldername=""
+      foldertarget=""
 
-macro :filelink do |obj, args, text|
-args, options = extract_macro_options(args, :size, :separate)
+      linktext  = text || "\\\\localhost\\c\\"
+      linktarget = "file://"+linktext.gsub('\\','/')
 
-        separate=false
-        if(options[:separate] == 'true')
-                separate= true
-        end
-        filefound = false
-        filename= ""
-        filetarget=""
-        foldername=""
-        foldertarget=""
+      linktarget = URI.encode(linktarget)
+      linktextEncoded = linktext.gsub('\\','/')
 
-        linktext  = text || "\\\\localhost\\c\\"
-        linktarget = "file://"+linktext.gsub('\\','/')
+      out = "".html_safe
 
-        linktarget = URI.encode(linktarget)
-        linktextEncoded = linktext.gsub('\\','/')
+			re = /(^.*[\\])(.*\.[^\\]+)$/m
 
-        out = "".html_safe
+			# Print the match result
+			linktext.match(re) do |match|
+			  foldername=match[1].to_s
+			  filename= match[2].to_s
+				filefound=true
+				foldertarget="file://"+foldername.gsub('\\','/')
+				foldertarget=URI.encode(foldertarget)
+			  foldertargetEncoded=foldertarget.gsub('\\','/')
+			end
 
-re = /(^.*[\\])(.*\.[^\\]+)$/m
+      id = "filelink" + SecureRandom.urlsafe_base64()
 
-# Print the match result
-linktext.match(re) do |match|
-   foldername=match[1].to_s
-   filename= match[2].to_s
-   filefound=true
-   foldertarget="file://"+foldername.gsub('\\','/')
-   foldertarget=URI.encode(foldertarget)
-   foldertargetEncoded=foldertarget.gsub('\\','/')
-end
-
-
-        id = "filelink" + SecureRandom.urlsafe_base64()
-
-        if separate && filefound
-                #if we detected a link pointing to a file instead of a folder optionally show a link to the fils and a separate link to the parent folder.
-                out << link = link_to(filename, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
-                out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document$
-                out << ' in Verzeichnis '
-                out << link = link_to(foldername, foldertarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
-                out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document$
-        else
-                out << link = link_to(linktext, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
-                #       cpbutton = " <button type='button' onClick=\"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy$
-                #out << cpbutton.html_safe
-                out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document$
-        end
-
-        out
-
-    end
-
-#Plugin end
+      if separate && filefound
+        #if we detected a link pointing to a file instead of a folder optionally show a link to the fils and a separate link to the parent folder.
+        out << link = link_to(filename, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+        out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
+        out << ' in Verzeichnis '
+        out << link = link_to(foldername, foldertarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+	      out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
+      else
+        out << link = link_to(linktext, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+        #out << cpbutton.html_safe
+        out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
+     	end
+     	out
+		end
+	#Plugin end
   end
 end
