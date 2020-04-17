@@ -14,7 +14,7 @@ Installation
 1. Download archive and extract to /your/path/to/redmine/plugins/
 2. Restart Redmine
 
-Login to Redmine and go to Administration->Plugins. You should now see 'Redmine LaTeX MathJax Macro'. Enjoy!
+Login to Redmine and go to Administration->Plugins. You should now see 'Redmine Filelinks'. Enjoy!
 
 Usage
 ------------
