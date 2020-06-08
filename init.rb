@@ -6,11 +6,15 @@ require 'redmine'
 Redmine::Plugin.register :redmine_filelinks do
 
 	name 'Redmine filelinks plugin'
-	author '5inf'
+	author '5inf, !Lucky'
 	description 'This macro provides means for propperly formatting windows file links'
 	version '0.0.0'
 	url 'https://github.com/5inf/redmine_wikiforms'
 	author_url 'https://github.com/5inf/'
+
+  settings :default => {
+    'use_awesome' => false,
+  }, :partial => 'settings/filelinks'
 
 	Redmine::WikiFormatting::Macros.register do
 		desc <<-DESCRIPTION
@@ -39,6 +43,8 @@ DESCRIPTION
 
 		macro :filelink do |obj, args, text|
 			args, options = extract_macro_options(args, :separate)
+			logger.info args
+			logger.info options
 
 			separate=false
 			if(options[:separate] == 'true')
@@ -50,12 +56,13 @@ DESCRIPTION
 			foldername=""
 			foldertarget=""
 
-			linktext	= text || "\\\\localhost\\c\\"
+			linktext	= text || args[0] || "\\\\localhost\\c\\"
 			linktarget = "file://"+linktext.gsub('\\','/')
 
 			linktarget = URI.encode(linktarget)
 			linktextEncoded = linktext.gsub('\\','/')
 
+			logger.info "File link #{text}:#{linktext}: #{linktarget}"
 			out = "".html_safe
 
 			re = /(^.*[\\])(.*\.[^\\]+)$/m
@@ -71,18 +78,20 @@ DESCRIPTION
 			end
 
 			id = "filelink" + SecureRandom.urlsafe_base64()
+			use_awesome = !Setting.plugin_redmine_rtmaterial['use_awesome'].blank? ? Setting.plugin_redmine_rtmaterial['use_awesome'] : false
+			cssName = use_awesome ? "fa fa-clipboard" : "icon icon-copy"
 
 			if separate && filefound
 				#if we detected a link pointing to a file instead of a folder optionally show a link to the fils and a separate link to the parent folder.
+				out << content_tag(:i, '', {:class=>cssName, :title => l('copy'), :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);"})
 				out << link = link_to(filename, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
-				out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
-				out << ' in Verzeichnis '
+				out << ' '+l(:in_folder)+' '
+				out << content_tag(:i, '', :class=>cssName, :title => l('copy'), :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
 				out << link = link_to(foldername, foldertarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
-				out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
 			else
-				out << link = link_to(linktext, linktarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+				out << content_tag(:i, '', :class=>cssName, :title => l('copy'), :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
+				out << link = link_to(linktext, linktarget, :title => l('copy'), :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
 				#out << cpbutton.html_safe
-				out << content_tag(:i, '(copy)', :class=>"fa fa-clipboard", :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
 			end
 			out
 		end

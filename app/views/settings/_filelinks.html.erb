@@ -1,0 +1,5 @@
+<% defaults = Redmine::Plugin::registered_plugins[:redmine_filelinks].settings[:default] %>
+<p>
+  <label><%= l('setting.use_awesome') %></label>
+  <%= check_box_tag('settings[use_awesome]', 0, @settings[:use_awesome]) %>
+</p>
