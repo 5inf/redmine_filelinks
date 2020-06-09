@@ -1,0 +1,5 @@
+ge:
+  copy: "Copy"
+  in_folder: "in Verzeichnis"
+  setting:
+    use_awesome: "Use AweSome font"
