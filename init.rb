@@ -78,7 +78,7 @@ DESCRIPTION
 			end
 
 			id = "filelink" + SecureRandom.urlsafe_base64()
-			use_awesome = !Setting.plugin_redmine_rtmaterial['use_awesome'].blank? ? Setting.plugin_redmine_rtmaterial['use_awesome'] : false
+			use_awesome = !Setting.plugin_redmine_filelinks['use_awesome'].blank? ? Setting.plugin_redmine_filelinks['use_awesome'] : false
 			cssName = use_awesome ? "fa fa-clipboard" : "icon icon-copy"
 
 			if separate && filefound
