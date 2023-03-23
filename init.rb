@@ -59,7 +59,7 @@ DESCRIPTION
 			linktext	= text || args[0] || "\\\\localhost\\c\\"
 			linktarget = "file://"+linktext.gsub('\\','/')
 
-			linktarget = URI.encode(linktarget)
+			linktarget = URI.encode_www_form_component(linktarget)
 			linktextEncoded = linktext.gsub('\\','/')
 
 			logger.info "File link #{text}:#{linktext}: #{linktarget}"
@@ -73,7 +73,7 @@ DESCRIPTION
 				filename= match[2].to_s
 				filefound=true
 				foldertarget="file://"+foldername.gsub('\\','/')
-				foldertarget=URI.encode(foldertarget)
+				foldertarget=URI.encode_www_form_component(foldertarget)
 				foldertargetEncoded=foldertarget.gsub('\\','/')
 			end
 
