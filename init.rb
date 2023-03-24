@@ -90,7 +90,7 @@ DESCRIPTION
 				out << link = link_to(foldername, foldertarget, :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
 			else
 				out << content_tag(:i, '', :class=>cssName, :title => l('copy'), :onClick=>"const ta=document.createElement('textarea');ta.value='"+linktextEncoded+"'.replace(/\\//g, '\\\\');document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);")
-				out << link = link_to(linktext, linktarget, :title => l('copy'), :target =>'_blank', :class => 'filelink', :title => id, :name => id, :id => id)
+				out << link = link_to(linktext, linktarget, :title => l('copy'), :target =>'_blank', :class => 'filelink', :name => id, :id => id)
 				#out << cpbutton.html_safe
 			end
 			out
