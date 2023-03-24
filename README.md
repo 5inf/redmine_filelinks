@@ -6,7 +6,7 @@ This macro provides means for propperly formatting windows file links
 Requirements
 ------------
 
-Redmine 3.0.x, 3.1.x, 4.0.x or 4.1.x
+Redmine 3.0.x, 3.1.x, 4.0.x, 4.1.x and 5.0.x
 Other versions are not tested but may work.
 
 Installation
